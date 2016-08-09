@@ -1,0 +1,17 @@
+{
+  "name": "sequelize-to-json",
+  "version": "0.9.0",
+  "description": "Serialization of Sequelize models to JSON-compatible objects",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "sequelize",
+    "json",
+    "model",
+    "serialization"
+  ],
+  "author": "abstractpseudocitizen@gmail.com",
+  "license": "ISC"
+}
