@@ -61,16 +61,16 @@ BlogPost.findAll({
 
 Resulting JSONified post objects would look like this (assuming `BlogPost` contains the `title` and `content` fields):
 
-```json
+```js
 {
-  title: ...,
-  content: ...,
+  "title": ...,
+  "content": ...,
   ...,
-  author: {
-    fullName: ...,
-    aboutMe: ...,
-    profileUrl: ...,
-    avatarUrl: ...
+  "author": {
+    "fullName": ...,
+    "aboutMe": ...,
+    "profileUrl": ...,
+    "avatarUrl": ...
   }
 }
 ```
@@ -212,7 +212,7 @@ Following options can be passed to the `Serialize` constructor:
 
 ### Adding serialization methods to models
 
-To save on some typing and `require`ing across the application code, you can add serialization methods globally to all your models. Just use `define.classMethods` and `define.instanceMethods` options during Sequelize instantiation:
+To save yourself some typing and `require`ing across the application code, you can add serialization methods globally to all your models. Just use `define.classMethods` and `define.instanceMethods` options during Sequelize instantiation:
 
 ```js
 const db = new Sequelize(..., {
@@ -236,7 +236,7 @@ const db = new Sequelize(..., {
 
 ```
 
-Now you can use them like so:
+Now you can use these methods like so:
 
 ```js
 // for single object
