@@ -89,7 +89,7 @@ function _getSchemeFromModel(model, scheme) {
 
 class Serializer {
   constructor(model, scheme, options) {
-    let sequelize = model.sequelize;
+    let sequelize = model.sequelize || {};
     if(!sequelize.Model || !(model instanceof sequelize.Model)) {
       throw new Error('' + model + ' is not a valid Sequelize model');
     }
