@@ -13,5 +13,10 @@
     "serialization"
   ],
   "author": "abstractpseudocitizen@gmail.com",
-  "license": "ISC"
+  "license": "ISC",
+  "homepage": "https://github.com/hauru/sequelize-to-json",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hauru/sequelize-to-json.git"
+  }
 }
