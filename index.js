@@ -64,7 +64,7 @@ function encodeToJSON(value, options) {
 
 const _policies = { FAIL: 1, SKIP: 2, SET_NULL: 3 };
 
-const _defaultOptions = {
+let _defaultOptions = {
   encoder: encodeToJSON,
   undefinedPolicy: _policies.SKIP,
   copyJSONFields: true,
@@ -324,5 +324,6 @@ for(let p in _policies) {
 }
 
 Serializer.encodeToJSON = encodeToJSON;
+Serializer.defaultOptions = _defaultOptions;
 
 module.exports = Serializer;
