@@ -90,19 +90,29 @@ function _getSchemeFromModel(model, scheme) {
 class Serializer {
   constructor(model, scheme, options) {
     let sequelize = model.sequelize || {};
+    let schemeName = null;
+    
     if(!sequelize.Model || !(model instanceof sequelize.Model)) {
       throw new Error('' + model + ' is not a valid Sequelize model');
     }
 
     if(typeof(scheme) === 'string') {
+      schemeName = scheme;
       scheme = _getSchemeFromModel(model, scheme);
     } else if(!scheme) {
       if(model.serializer) {
         let schemes = model.serializer.schemes || {};
+        
         if(model.serializer.defaultScheme) {
+          schemeName = model.serializer.defaultScheme;
           scheme = schemes[model.serializer.defaultScheme];
         } else {
-          scheme = schemes.default || _defaultScheme;
+          if(schemes.default) {
+            schemeName = 'default';
+            scheme = schemes.default;
+          } else {
+            scheme = _defaultScheme;
+          }
         }
       } else {
         scheme = _defaultScheme;
@@ -114,11 +124,12 @@ class Serializer {
     }
 
     options = _.defaultsDeep({}, scheme.options, options, _defaultOptions);
-
+  
     this._options = options;
     this._seq = sequelize;
     this._model = model;
     this._scheme = scheme;
+    this._schemeName = schemeName;
     this._cache = options._cache || {};
 
     this._attr = {
@@ -283,6 +294,14 @@ class Serializer {
             throw new Error('Invalid undefinedPolicy setting');
         }
       }
+    }
+
+    if(this._model.serializer && this._model.serializer.postSerialize) {
+      output = this._model.serializer.postSerialize.call(this._scheme, output, inst, this._schemeName);
+    }
+    
+    if(this._scheme.postSerialize) {
+      output = this._scheme.postSerialize(output, inst);
     }
 
     return output;
