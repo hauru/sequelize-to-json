@@ -71,8 +71,7 @@ let _defaultOptions = {
   simpleDates: true,
   encoderOptions: {
     blobEncoding: 'base64'
-  },
-  _attrPath: ''
+  }
 };
 
 function _getSchemeFromModel(model, scheme) {
@@ -119,14 +118,19 @@ class Serializer {
       throw new Error('Invalid serialization scheme for ' + model.name + ': ' + scheme);
     }
 
-    options = _.defaultsDeep({}, options, scheme.options, _defaultOptions);
-  
-    this._options = options;
+    this._origOptions = options;
+    this._options = _.defaultsDeep(
+      {}, 
+      options, 
+      scheme.options, 
+      model.serializer ? model.serializer.options : null, 
+      _defaultOptions
+    );
+    
     this._seq = sequelize;
     this._model = model;
     this._scheme = scheme;
     this._schemeName = schemeName;
-    this._cache = options._cache || {};
 
     this._attr = {
       all: [],
@@ -236,16 +240,16 @@ class Serializer {
   }
 
   _serializeAssoc(attr, inst, cache) {
-    let attrPath = this._options._attrPath + '.' + attr;
+    let attrPath = (this._attrPath ? this._attrPath + '.' : '') + attr;
     let serializer;
 
     if(cache && cache[attrPath]) {
       serializer = cache[attrPath];
     } else {
       let scheme = this._scheme.assoc ? this._scheme.assoc[attr] : null;
-      let options = _.cloneDeep(this._options);
-      options._attrPath = attrPath;
-      serializer = new Serializer(inst.Model, scheme, options);
+      
+      serializer = new Serializer(inst.Model, scheme, this._origOptions);
+      serializer._attrPath = attrPath;
 
       if(cache) cache[attrPath] = serializer;
     }
