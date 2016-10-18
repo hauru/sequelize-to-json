@@ -123,7 +123,7 @@ class Serializer {
       throw new Error('Invalid serialization scheme for ' + model.name + ': ' + scheme);
     }
 
-    options = _.defaultsDeep({}, scheme.options, options, _defaultOptions);
+    options = _.defaultsDeep({}, options, scheme.options, _defaultOptions);
   
     this._options = options;
     this._seq = sequelize;
