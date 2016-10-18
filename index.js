@@ -75,10 +75,6 @@ let _defaultOptions = {
   _attrPath: ''
 };
 
-const _defaultScheme = {
-  include: ['@all']
-};
-
 function _getSchemeFromModel(model, scheme) {
   if(model.serializer && model.serializer.schemes) {
     return model.serializer.schemes[scheme] || null;
@@ -111,11 +107,11 @@ class Serializer {
             schemeName = 'default';
             scheme = schemes.default;
           } else {
-            scheme = _defaultScheme;
+            scheme = {};
           }
         }
       } else {
-        scheme = _defaultScheme;
+        scheme = {};
       }
     }
 
