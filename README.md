@@ -89,8 +89,9 @@ This class is the only thing exported by the module. It can be accessed directly
 
 (The class doesn't actually have a name of it's own; i'm using here the name `Serializer` just for clarity. You can import it under any name you wish.)
 
-#### `Serializer(model, [scheme, [options]])`
 <a id="serializer-serializer"></a>
+#### `Serializer(model, [scheme, [options]])`
+
 
 Creates a new serializer.
 
@@ -155,6 +156,12 @@ Notes on how values are converted:
 * Dates are stringified using `#toString()`
 * Buffers are stringified using `#toString()` with encoding specified in options
 
+<a id="serializer-default-options"></a>
+#### `.defaultOptions`
+
+Object holding the global defaults for serialization [options](#options).
+
+<a id="schemes"></a>
 ### Defining schemes
 
 #### Scheme object
@@ -166,6 +173,7 @@ Scheme are defined as plain objects. They can contain following fields:
 * **`assoc`** - an object containing schemes for associated model instances. Object's keys should correspond to names of attributes holding related instances (Sequelize's `as`). Values can be either scheme names or scheme objects. They will be passed to the `Serializer` constructor when creating serializers for associated instances.
 * **`as`** - can be used to rename attributes in output. Should be an object mapping model attribute names to names we would like to have in JSON. Useful for naming properties obtained from method calls (eg. to have `postExcerpt` instead of `getPostExcerpt`).
 * **`options`** - serializer [options](#options). They will override options passed to the `Serializer` constructor.
+* **`postSerialize`** - the hook function to be called after the instance has been converted into object. It receives the output object as the first argument and the original instance as the second one. Must return the (modified) output object. Gets called *after* the [model-wide `postSerialize` hook](#schemes-inside-models).
 
 #### Attribute lists
 
@@ -174,6 +182,8 @@ Both the `include` and the `exclude` fields of a scheme definition should contai
 * method names (to be called with no arguments),
 * regular instance properties,
 * `@`-prefixed selectors that expand to subsets of model attributes sharing certain features.
+
+Attributes can be prefixed with a dot to mark them expicitely as regular attributes of the model instance object.
 
 `sequelize-to-json` provides support for following attribute selectors:
 
@@ -188,7 +198,7 @@ Both the `include` and the `exclude` fields of a scheme definition should contai
 
 Note: model attribute values are obtained by calling `.get()` on the model instance. This means custom getters get executed.
 
-
+<a id="schemes-inside-models"></a>
 #### Schemes inside models
 
 In order to keep things clean, serialization schemes can be kept inside models. This is done by adding a static `serializer` property to the model class. You can either set this property directly or just put it in `instanceMethods` when defining the model.
@@ -197,16 +207,25 @@ Supported `serializer` fields are:
 
 * **`schemes`** - an object containing available serialization schemes (keys are names and values are scheme objects)
 * **`defaultScheme`** - name of the default scheme for this model. The name should exist as a proper key in `schemes`.
+* **`options`** - model-wide defaults for [serialization options](#options)
+* **`postSerialize`** - the model-wide hook function to be called after the instance has been converted into object. It gets called with the serialization scheme as `this` and receives 3 arguments: the output object, the original model instance and the name of the serialization scheme. Must return the (modified) output object. Gets called *before* the scheme-specific `postSerialize` hook.
 
 ### Options
 
-Following options can be passed to the `Serialize` constructor:
+Following options can be used to tune the serialization output:
 
 * **`encoder`** - a function used to convert JS types to JSON-friendly format. It should accept an object to be encoded and can be also passed options. Default: [`Serializer.encodeToJSON()`](#serializer-encode-to-json)
 * **`undefinedPolicy`** - what to do with attributes that are `undefined` for the instance. Allowed policies are `Serializer.SKIP` (exclude from output), `Serializer.SET_NULL` (set their values to `null`) and `Serializer.FAIL` (throw an error). Default: `Serializer.SKIP`
 * **`copyJSONFields`** - whether values stored as JSON (`JSON`, `JSONB` etc.) should be copied directly without passing them through `encoder`. Having it on will improve performance a bit. Default: `true`
 * **`simpleDates`** - whether `DATEONLY` fields should be encoded in `YYYY-MM-DD` format with timezone offset applied. If set to `false`, they will be stringified as full date-times. Default: `true`
 * **`encoderOptions`** - options to be passed to `encoder` (as the second argument)
+
+Above options can be customized in four different places altogether (with precedence from the top to the bottom):
+
+* in [constructor](#serializer-serializer) (passed as the last argument);
+* inside a [scheme object](#schemes);
+* [inside a model](#schemes-inside-models);
+* globally, by modifying `Serializer.defaultOptions`.
 
 ## Tips
 
