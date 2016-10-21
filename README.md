@@ -219,6 +219,7 @@ Following options can be used to tune the serialization output:
 * **`copyJSONFields`** - whether values stored as JSON (`JSON`, `JSONB` etc.) should be copied directly without passing them through `encoder`. Having it on will improve performance a bit. Default: `true`
 * **`simpleDates`** - whether `DATEONLY` fields should be encoded in `YYYY-MM-DD` format with timezone offset applied. If set to `false`, they will be stringified as full date-times. Default: `true`
 * **`encoderOptions`** - options to be passed to `encoder` (as the second argument)
+* **`attrFilter`** - function to filter model attributes before serialization. Can be useful in certain cases, eg. when one wants to get rid of duplicates of auto-generated attributes (such as `some_id` showing up together with `someId`). The function gets passed 2 arguments: the attribute object and the model object. It should return `false` for the attribute to be excluded from serialization.
 
 Above options can be customized in four different places altogether (with precedence from the top to the bottom):
 

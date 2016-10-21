@@ -155,6 +155,11 @@ class Serializer {
       if(!this._model.attributes.hasOwnProperty(name)) continue;
 
       a = this._model.attributes[name];
+      
+      if(this._options.attrFilter && this._options.attrFilter(a, this._model) === false) {
+        continue;
+      }
+      
       typeName = a.type.key;
       
       attr.all.push(a.fieldName);
