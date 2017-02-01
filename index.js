@@ -74,6 +74,26 @@ let _defaultOptions = {
   }
 };
 
+function deepMerge (sources) {
+  let res = {};
+  for(let object of sources) {
+    for(let key in object) {
+      if(!object.hasOwnProperty(key)) {
+        continue;
+      }
+
+      if(Array.isArray(object[key]) && Array.isArray(res[key])) {
+        res[key] = res[key].concat(object[key]);
+      } else if(typeof object[key] == 'object' && typeof res[key] == 'object') {
+        res[key] = deepMerge([res[key], object[key]]);
+      } else {
+        res[key] = _.cloneDeep(object[key]);
+      }
+    }
+  }
+  return res;
+}
+
 function _getSchemeFromModel(model, scheme) {
   if(model.serializer && model.serializer.schemes) {
     return model.serializer.schemes[scheme] || null;
@@ -91,7 +111,13 @@ class Serializer {
       throw new Error('' + model + ' is not a valid Sequelize model');
     }
 
-    if(typeof(scheme) === 'string') {
+    if(Array.isArray(scheme)) {
+      schemeName = scheme.join('_');
+
+      scheme = (model.serializer && typeof model.serializer.schemes == 'object')
+        ? deepMerge(scheme.map(function(schemeName) { return model.serializer.schemes[schemeName]; }))
+        : null;
+    } else if(typeof(scheme) === 'string') {
       schemeName = scheme;
       scheme = _getSchemeFromModel(model, scheme);
     } else if(!scheme) {
