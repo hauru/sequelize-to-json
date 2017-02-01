@@ -105,7 +105,7 @@ If `scheme` is a string, the scheme definition will be searched for in `model.se
 
 If `scheme` is an array, the result will be a deep merge of definitions with corresponding names from `model.serializer.schemes`.
 For example:
-```javascript
+```js
 User.serializer = {
   schemes: {
     default: {
@@ -254,6 +254,16 @@ Above options can be customized in four different places altogether (with preced
 * globally, by modifying `Serializer.defaultOptions`.
 
 ## Tips
+
+### Using helper `Serializer.serialize(entityOrArray, scheme)`
+
+This method will automatically detect if it's needed to serialize single or many entities and extract needed Model from them.
+
+```js
+const serialize = require('sequelize-to-json').serialize;
+
+serialize(User.findAll());
+```
 
 ### Adding serialization methods to models
 

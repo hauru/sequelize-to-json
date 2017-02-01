@@ -348,6 +348,20 @@ class Serializer {
 
     return result;
   }
+  
+  static serialize(entityOrArray, scheme) {
+    if(Array.isArray(entityOrArray)) {
+      if(!entityOrArray.length) {
+        return [];
+      }
+
+      return Serializer
+        .serializeMany(entityOrArray, entityOrArray[0].Model, scheme);
+    } else {
+      return new Serializer(entityOrArray.Model, scheme)
+        .serialize(entityOrArray);
+    }
+  }
 }
 
 for(let p in _policies) {
