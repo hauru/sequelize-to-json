@@ -122,7 +122,7 @@ User.serializer = {
   }
 };
 
-var serializer = new Serialize(User, ['default', 'withPosts']);
+var serializer = new Serializer(User, ['default', 'withPosts']);
 serializer.serialize(user);
 ```
 
