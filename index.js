@@ -15,12 +15,28 @@ const ARRAY_TYPES = [
   'Float32Array',
   'Float64Array'
 ];
+
 const DOC_DB_TYPES = ['JSON', 'JSONB', 'HSTORE'];
+
+const _policies = { FAIL: 1, SKIP: 2, SET_NULL: 3 };
+
+
+let _defaultOptions = {
+  encoder: encodeToJSON,
+  undefinedPolicy: _policies.SKIP,
+  copyJSONFields: true,
+  simpleDates: true,
+  encoderOptions: {
+    blobEncoding: 'base64'
+  }
+};
+
 
 function _padWith0(v) {
   v = '' + v;
   return v.length == 1 ? '0' + v : v;
 }
+
 
 function encodeToJSON(value, options) {
   let className = (value && typeof(value.constructor) === 'function') ? value.constructor.name : null;
@@ -62,17 +78,6 @@ function encodeToJSON(value, options) {
   }
 }
 
-const _policies = { FAIL: 1, SKIP: 2, SET_NULL: 3 };
-
-let _defaultOptions = {
-  encoder: encodeToJSON,
-  undefinedPolicy: _policies.SKIP,
-  copyJSONFields: true,
-  simpleDates: true,
-  encoderOptions: {
-    blobEncoding: 'base64'
-  }
-};
 
 function _getSchemeFromModel(model, schemeName) {
   if(model.serializer && model.serializer.schemes) {
@@ -81,6 +86,16 @@ function _getSchemeFromModel(model, schemeName) {
 
   return null;
 }
+
+
+function _getManySchemesFromModel(model, schemeNames) {
+  if(!model.serializer || !model.serializer.schemes) {
+    return [];
+  }
+  
+  return schemeNames.map((name) => model.serializer.schemes[name]);
+}
+
 
 class SchemeBuilder {
   constructor(model, options) {
@@ -166,6 +181,47 @@ class SchemeBuilder {
     }
 
     return result;
+  }
+  
+  mergeSchemes(schemes) {
+    // include, exclude, assoc, as, options, postSerialize
+    
+    if(!schemes.length) return null;
+    
+    let include = null, exclude, as = {}, postSerialize = [], assoc = {}, options = {};
+    
+    for(let scheme of schemes) {
+      if(include === null) {
+        include = scheme.include ? this.expandAttributes(scheme.include) : this.attr.all;
+      } else if(scheme.include) {
+        include = include.concat(this.expandAttributes(scheme.include));
+      }
+      
+      if(scheme.exclude) {
+        exclude = this.expandAttributes(scheme.exclude);
+        include = include.map((e) => exclude.indexOf(e) < 0);
+      }
+      
+      if(scheme.as) {
+        Object.assign(as, scheme.as);
+      }
+      
+      if(Array.isArray(scheme.postSerialize)) {
+        postSerialize = postSerialize.concat(scheme.postSerialize);
+      } else if(scheme.postSerialize) {
+        postSerialize.push(scheme.postSerialize);
+      }
+      
+      if(scheme.assoc) {
+        assoc = _.defaultsDeep({}, scheme.assoc, assoc);
+      }
+      
+      if(scheme.options) {
+        Object.assign(options, scheme.options);
+      }
+    }
+    
+    return { include: _.uniq(include), as, postSerialize, assoc, options };
   }
 }
 
@@ -339,6 +395,7 @@ class Serializer {
     return result;
   }
 }
+
 
 for(let p in _policies) {
   Serializer[p] = _policies[p];
