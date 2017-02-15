@@ -93,15 +93,37 @@ function _getManySchemesFromModel(model, schemeNames) {
     return [];
   }
   
-  return schemeNames.map((name) => model.serializer.schemes[name]);
+  let result = [];
+  for(let name of schemeNames) {
+    
+    if(typeof(name) !== 'string') {
+      throw new Error('Scheme sequence must be an array of strings (scheme names)');
+    }
+    
+    result.push(model.serializer.schemes[name]);
+  }
+  
+  return result;
 }
 
 
 class SchemeBuilder {
-  constructor(model, options) {
+  constructor(model) {
+    if(!model.sequelize || !(model instanceof model.sequelize.Model)) {
+      throw new Error('' + model + ' is not a valid Sequelize model');
+    }
+    
     this.model = model;
-
-    this.attr = {
+    //this.attr = {};
+    this._collectAttrs();
+  }
+  
+  hasAttr(name, selector) {
+    return this.attr[selector || 'all'].indexOf(name) > -1;
+  }
+  
+  _collectAttrs(attrFilter) {
+    let attr =  {
       all: [],
       virtual: [],
       pk: [],
@@ -111,17 +133,6 @@ class SchemeBuilder {
       doc: [],
       auto: []
     };
-
-    options = options || {};
-    this._collectAttrs(options);
-  }
-  
-  hasAttr(name, selector) {
-    return this.attr[selector || 'all'].indexOf(name) > -1;
-  }
-  
-  _collectAttrs(options) {
-    let attr = this.attr;
     let a, typeName;
 
     for(let name in this.model.attributes) {
@@ -129,7 +140,7 @@ class SchemeBuilder {
 
       a = this.model.attributes[name];
       
-      if(options.attrFilter && options.attrFilter(a, this.model) === false) {
+      if(attrFilter && attrFilter(a, this.model) === false) {
         continue;
       }
       
@@ -151,6 +162,8 @@ class SchemeBuilder {
       a = this.model.associations[name];
       attr.assoc.push(a.as);
     }
+    
+    this.attr = attr;
   }
   
   expandAttributes(list) {
@@ -199,7 +212,7 @@ class SchemeBuilder {
       
       if(scheme.exclude) {
         exclude = this.expandAttributes(scheme.exclude);
-        include = include.map((e) => exclude.indexOf(e) < 0);
+        include = include.filter((e) => exclude.indexOf(e) < 0);
       }
       
       if(scheme.as) {
@@ -221,23 +234,28 @@ class SchemeBuilder {
       }
     }
     
+    if(postSerialize.length < 2) {
+      postSerialize = postSerialize.length ? postSerialize[0] : null;
+    }
+    
     return { include: _.uniq(include), as, postSerialize, assoc, options };
   }
+  
 }
 
 
 class Serializer {
   constructor(model, scheme, options) {
-    let sequelize = model.sequelize || {};
     let schemeName = null;
     
-    if(!sequelize.Model || !(model instanceof sequelize.Model)) {
-      throw new Error('' + model + ' is not a valid Sequelize model');
-    }
+    this._builder = new SchemeBuilder(model);
 
     if(typeof(scheme) === 'string') {
       schemeName = scheme;
       scheme = _getSchemeFromModel(model, scheme);
+    } else if(Array.isArray(scheme)) {
+      let schemes = _getManySchemesFromModel(model, scheme);
+      scheme = this._builder.mergeSchemes(schemes);
     } else if(!scheme) {
       if(model.serializer) {
         let schemes = model.serializer.schemes || {};
@@ -262,6 +280,11 @@ class Serializer {
       throw new Error('Invalid serialization scheme for ' + model.name + ': ' + scheme);
     }
 
+    this._seq = model.sequelize;
+    this._model = model;
+    this._scheme = scheme;
+    this._schemeName = schemeName;
+
     this._origOptions = options;
     this._options = _.defaultsDeep(
       {}, 
@@ -271,14 +294,11 @@ class Serializer {
       _defaultOptions
     );
     
-    this._seq = sequelize;
-    this._model = model;
-    this._scheme = scheme;
-    this._schemeName = schemeName;
-
-    this._builder = new SchemeBuilder(model, this._options);
-    
     this._attrList = this._builder.compileAttributesList(scheme);
+    
+    if(this._options.attrFilter) {
+      this._attrList = this._attrList.filter((a) => (this._options.attrFilter(a, this._model) !== false));
+    }
   }
 
 
@@ -378,7 +398,14 @@ class Serializer {
     }
     
     if(this._scheme.postSerialize) {
-      output = this._scheme.postSerialize(output, inst);
+      let func = this._scheme.postSerialize;
+      if(Array.isArray(func)) {
+        for(let f of func) {
+          output = f(output, inst);
+        }
+      } else {
+        output = func(output, inst);
+      }
     }
 
     return output;
@@ -393,6 +420,12 @@ class Serializer {
     }
 
     return result;
+  }
+  
+  static mergeSchemes(model, schemeNames) {
+    let schemes = _getManySchemesFromModel(model, schemeNames);
+    let builder = new SchemeBuilder(model);
+    return builder.mergeSchemes(schemes);
   }
 }
 
