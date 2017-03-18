@@ -1,14 +1,14 @@
 # Changelog
 
-# 0.10.2
+## 0.10.2
 
 * README fixes
 
-# 0.10.1
+## 0.10.1
 
 * Added the `attrFilter` option
 
-# 0.10.0
+## 0.10.0
 
 * Modified options precedence & behavior
 * Made it possible to modify the global defaults for options
