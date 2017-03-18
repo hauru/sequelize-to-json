@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.10.2
+
+* README fixes
+
 # 0.10.1
 
 * Added the `attrFilter` option
