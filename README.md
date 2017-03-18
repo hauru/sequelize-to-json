@@ -201,7 +201,7 @@ Note: model attribute values are obtained by calling `.get()` on the model insta
 <a id="schemes-inside-models"></a>
 #### Schemes inside models
 
-In order to keep things clean, serialization schemes can be kept inside models. This is done by adding a static `serializer` property to the model class. You can either set this property directly or just put it in `instanceMethods` when defining the model.
+In order to keep things clean, serialization schemes can be kept inside models. This is done by adding a static `serializer` property to the model class. You can either set this property directly or just put it in `classMethods` when defining the model.
 
 Supported `serializer` fields are:
 
