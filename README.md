@@ -262,7 +262,7 @@ Now you can use these methods like so:
 // for single object
 let json = myModelInstance.serialize('someScheme');
 // for many objects
-let json = MyModel.serialize(instances, 'someScheme');
+let json = MyModel.serializeMany(instances, 'someScheme');
 ```
 
 Of course you can provide the scheme as an object and pass serializer options as the last argument for both methods.
