@@ -86,7 +86,11 @@ class Serializer {
   constructor(model, scheme, options) {
     let sequelize = model.sequelize || {};
     let schemeName = null;
-    
+
+    if(!sequelize || !sequelize.version || !sequelize.version.startsWith('4.')) {
+      throw new Error('Include sequelize 4.x or higher');
+    }
+
     if(!sequelize.Model || !(model.prototype instanceof sequelize.Model)) {
       throw new Error('' + model + ' is not a valid Sequelize model');
     }
