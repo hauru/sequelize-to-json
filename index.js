@@ -82,12 +82,45 @@ function _getSchemeFromModel(model, scheme) {
   return null;
 }
 
+function _isModel(obj, sequelize, seqVer) {
+  if(seqVer >= 4) {
+    return obj.prototype instanceof sequelize.Model;
+  } else {
+    return obj instanceof sequelize.Model;
+  }
+}
+
+function _isModelInstance(obj, sequelize, seqVer) {
+  if(seqVer >= 4) {
+    return obj instanceof sequelize.Model;
+  } else {
+    return obj instanceof sequelize.Instance;
+  }
+}
+
+function _getModelFromInstance(inst, seqVer) {
+  if(seqVer >= 4) {
+    return inst.constructor;
+  } else {
+    return inst.Model;
+  }
+}
+
+function _isSpecificModelInstance(obj, model, seqVer) {
+  if(seqVer >= 4) {
+    return obj instanceof model;
+  } else {
+    return obj instanceof model.Instance;
+  }
+}
+
 class Serializer {
   constructor(model, scheme, options) {
-    let sequelize = model.sequelize || {};
+    const sequelize = model.sequelize || {};
+    let seqVer = 1 * (sequelize.constructor.version || '-').split('.', 2)[0]; // major version as number
     let schemeName = null;
     
-    if(!sequelize.Model || !(model instanceof sequelize.Model)) {
+    if(!sequelize.Model || isNaN(seqVer) || !_isModel(model, sequelize, seqVer)) {
       throw new Error('' + model + ' is not a valid Sequelize model');
     }
 
@@ -128,6 +161,7 @@ class Serializer {
     );
     
     this._seq = sequelize;
+    this._seqVer = seqVer;
     this._model = model;
     this._scheme = scheme;
     this._schemeName = schemeName;
@@ -151,10 +185,12 @@ class Serializer {
     let attr = this._attr;
     let a, typeName;
 
-    for(let name in this._model.attributes) {
-      if(!this._model.attributes.hasOwnProperty(name)) continue;
+    const rawAttributes = this._model.attributes || this._model.rawAttributes;
 
-      a = this._model.attributes[name];
+    for(let name in rawAttributes) {
+      if(!rawAttributes.hasOwnProperty(name)) continue;
+
+      a = rawAttributes[name];
       
       if(this._options.attrFilter && this._options.attrFilter(a, this._model) === false) {
         continue;
@@ -230,7 +266,7 @@ class Serializer {
       }
       return result;
 
-    } else if(value instanceof this._seq.Instance) {
+    } else if(_isModelInstance(value, this._seq, this._seqVer)) {
 
       return this._serializeAssoc(attr, value, cache);
 
@@ -253,7 +289,7 @@ class Serializer {
     } else {
       let scheme = this._scheme.assoc ? this._scheme.assoc[attr] : null;
       
-      serializer = new Serializer(inst.Model, scheme, this._origOptions);
+      serializer = new Serializer(_getModelFromInstance(inst, this._seqVer), scheme, this._origOptions);
       serializer._attrPath = attrPath;
 
       if(cache) cache[attrPath] = serializer;
@@ -263,7 +299,7 @@ class Serializer {
   }
 
   serialize(inst, cache) {
-    if(!(inst instanceof this._model.Instance)) {
+    if(!_isSpecificModelInstance(inst, this._model, this._seqVer)) {
       throw new Error('Not an instance of ' + this._model.name);
     }
 
