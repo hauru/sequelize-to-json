@@ -87,7 +87,7 @@ class Serializer {
     let sequelize = model.sequelize || {};
     let schemeName = null;
     
-    if(!sequelize.Model || !(model instanceof sequelize.Model)) {
+    if(!sequelize.Model || !(model.prototype instanceof sequelize.Model)) {
       throw new Error('' + model + ' is not a valid Sequelize model');
     }
 
@@ -151,10 +151,10 @@ class Serializer {
     let attr = this._attr;
     let a, typeName;
 
-    for(let name in this._model.attributes) {
-      if(!this._model.attributes.hasOwnProperty(name)) continue;
+    for(let name in this._model.rawAttributes) {
+      if(!this._model.rawAttributes.hasOwnProperty(name)) continue;
 
-      a = this._model.attributes[name];
+      a = this._model.rawAttributes[name];
       
       if(this._options.attrFilter && this._options.attrFilter(a, this._model) === false) {
         continue;
@@ -230,7 +230,7 @@ class Serializer {
       }
       return result;
 
-    } else if(value instanceof this._seq.Instance) {
+    } else if(value instanceof this._seq.Model) {
 
       return this._serializeAssoc(attr, value, cache);
 
@@ -253,7 +253,7 @@ class Serializer {
     } else {
       let scheme = this._scheme.assoc ? this._scheme.assoc[attr] : null;
       
-      serializer = new Serializer(inst.Model, scheme, this._origOptions);
+      serializer = new Serializer(inst.constructer, scheme, this._origOptions);
       serializer._attrPath = attrPath;
 
       if(cache) cache[attrPath] = serializer;
@@ -263,7 +263,7 @@ class Serializer {
   }
 
   serialize(inst, cache) {
-    if(!(inst instanceof this._model.Instance)) {
+    if(!(inst instanceof this._model)) {
       throw new Error('Not an instance of ' + this._model.name);
     }
 
