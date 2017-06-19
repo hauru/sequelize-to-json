@@ -252,8 +252,8 @@ class Serializer {
       serializer = cache[attrPath];
     } else {
       let scheme = this._scheme.assoc ? this._scheme.assoc[attr] : null;
-      
-      serializer = new Serializer(inst.constructer, scheme, this._origOptions);
+
+      serializer = new Serializer(inst.constructor, scheme, this._origOptions);
       serializer._attrPath = attrPath;
 
       if(cache) cache[attrPath] = serializer;
