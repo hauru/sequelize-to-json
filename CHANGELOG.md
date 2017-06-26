@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.3
+
+* Added support for Sequelize 4.x
+
 ## 0.10.2
 
 * README fixes
