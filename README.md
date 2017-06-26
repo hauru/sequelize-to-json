@@ -4,6 +4,10 @@ A fast, simple JSON serializer for your [Sequelize](https://github.com/sequelize
 
 Serialization can be performed according to named _schemes_, of which any number can be defined for a model. A scheme specifies the properties to be be included or excluded in the result, and can also provide schemes to use for associated models.
 
+_Should_ work with both Sequelize 3.x and 4.x. Examples provided in this document are based on Sequelize 3. See [here](http://docs.sequelizejs.com/manual/tutorial/upgrade-to-v4.html) for the list of changes introduced in the new major release of Sequelize.
+
+Proper test suite is the next thing on the roadmap. Until it comes into existence the package shoud not be considered stable.
+
 `sequelize-to-json` requires Node 4.4.x or later.
 
 ## Installation
@@ -217,7 +221,7 @@ Following options can be used to tune the serialization output:
 * **`encoder`** - a function used to convert JS types to JSON-friendly format. It should accept an object to be encoded and can be also passed options. Default: [`Serializer.encodeToJSON()`](#serializer-encode-to-json)
 * **`undefinedPolicy`** - what to do with attributes that are `undefined` for the instance. Allowed policies are `Serializer.SKIP` (exclude from output), `Serializer.SET_NULL` (set their values to `null`) and `Serializer.FAIL` (throw an error). Default: `Serializer.SKIP`
 * **`copyJSONFields`** - whether values stored as JSON (`JSON`, `JSONB` etc.) should be copied directly without passing them through `encoder`. Having it on will improve performance a bit. Default: `true`
-* **`simpleDates`** - whether `DATEONLY` fields should be encoded in `YYYY-MM-DD` format with timezone offset applied. If set to `false`, they will be stringified as full date-times. Default: `true`
+* **`simpleDates`** - whether `DATEONLY` fields should be encoded in `YYYY-MM-DD` format with the timezone offset applied. If set to `false`, they will be stringified as full date-times. Default: `true`. Note: In Sequelize 4 `DATEONLY` fields are implemented as strings model-side so this option will have no effect.
 * **`encoderOptions`** - options to be passed to `encoder` (as the second argument)
 * **`attrFilter`** - function to filter model attributes before serialization. Can be useful in certain cases, eg. when one wants to get rid of duplicates of auto-generated attributes (such as `some_id` showing up together with `someId`). The function gets passed 2 arguments: the attribute object and the model object. It should return `false` for the attribute to be excluded from serialization.
 
