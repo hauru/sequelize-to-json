@@ -54,10 +54,10 @@ BlogPost.findAll({
   // ...
 }).then(function(posts) {
   // serialize all the items efficiently
-  let postsAsJSON = Serializer.serializeMany(posts, BlogPost, schema);
+  let postsAsJSON = Serializer.serializeMany(posts, BlogPost, scheme);
   
   // serialize just the first item
-  let serializer = new Serializer(BlogPost, schema);
+  let serializer = new Serializer(BlogPost, scheme);
   let postAsJSON = serializer.serialize(posts[0]);
   // ...
 });
