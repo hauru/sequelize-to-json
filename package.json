@@ -1,6 +1,6 @@
 {
   "name": "sequelize-to-json",
-  "version": "0.10.3",
+  "version": "0.10.4",
   "description": "Serialization of Sequelize models to JSON-compatible objects",
   "main": "index.js",
   "scripts": {
