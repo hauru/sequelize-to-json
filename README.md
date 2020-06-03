@@ -102,10 +102,35 @@ Creates a new serializer.
 Arguments are:
 
 * **`model`** - Sequelize model class whose instances are to be serialized
-* **`scheme`** - scheme to be used for serialization. Can be an object, a string or anything falsy.
+* **`scheme`** - scheme to be used for serialization. Can be an object, a string, an array or anything falsy.
 * **`options`** - object containing additional options (see [Options](#options))
 
-If `scheme` is a string, the scheme definition will be searched for in `model.serializer.schemes`. If `scheme` is falsy, following steps will be performed to identify the serialization scheme:
+If `scheme` is a string, the scheme definition will be searched for in `model.serializer.schemes`.
+
+If `scheme` is an array, the result will be a deep merge of definitions with corresponding names from `model.serializer.schemes`.
+For example:
+```js
+User.serializer = {
+  schemes: {
+    default: {
+      include: ['id', 'email', 'phone', 'name']
+    },
+    withPosts: {
+      include: ['posts'],
+      assoc: {
+        posts: {
+          include: ['id', 'title', 'content']
+        }
+      }
+    }
+  }
+};
+
+var serializer = new Serializer(User, ['default', 'withPosts']);
+serializer.serialize(user);
+```
+
+If `scheme` is falsy, following steps will be performed to identify the serialization scheme:
 
 1. If `model.serializer.defaultScheme` is set, it will be interpreted as the name of scheme to use (from `model.serializer.schemes`).
 2. If there's no `model.serializer.defaultScheme`, the scheme is checked for in `model.serializer.schemes.default`.
@@ -233,6 +258,16 @@ Above options can be customized in four different places altogether (with preced
 * globally, by modifying `Serializer.defaultOptions`.
 
 ## Tips
+
+### Using helper `Serializer.serialize(entityOrArray, scheme)`
+
+This method will automatically detect if it's needed to serialize single or many entities and extract needed Model from them.
+
+```js
+const serialize = require('sequelize-to-json').serialize;
+
+serialize(User.findAll());
+```
 
 ### Adding serialization methods to models
 
